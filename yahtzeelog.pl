@@ -53,7 +53,7 @@ calcular_full_house(Dados, Puntaje) :-
     select(Y, DadosRestantes, DadosRestantesRestantes),
     X \= Y,
     count(DadosRestantes, X, Ocurrencias),
-    Ocurrencias = 2, !,
+    Ocurrencias = 2,
     count(DadosRestantesRestantes, Y, Ocurrencias2),
     Ocurrencias2 = 1, !,
     Puntaje is 25.
