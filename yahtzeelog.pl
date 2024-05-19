@@ -78,7 +78,7 @@ large_straight([2,3,4,5,6], 40) :- !.
 large_straight(_, 0).
 
 calcular_large_straight(Dados, Puntaje) :- 
-    sort(Dados, DadosOrdenados), large_straight(Dados, Puntaje).
+    sort(Dados, DadosOrdenados), large_straight(DadosOrdenados, Puntaje).
 
 calcular_yahtzee([X,X,X,X,X], 50) :- !.
 calcular_yahtzee(_, 0).
@@ -100,6 +100,32 @@ puntaje(Dados, large_straight, Puntos) :- calcular_large_straight(Dados, Puntos)
 puntaje(Dados, yahtzee, Puntos) :- calcular_yahtzee(Dados, Puntos).
 puntaje(Dados, chance, Puntos) :- calcular_chance(Dados, Puntos).
 
+% puntaje_tablero(+Tablero, -Puntaje) Dado un tablero que tiene todos los slots completos devuelve el total de puntos
+
+categoria_superior(aces).
+categoria_superior(twos).
+categoria_superior(threes).
+categoria_superior(fours).
+categoria_superior(fives).
+categoria_superior(sixes).
+
+calcular_categorias([CategoriaActual|RestoCategorias], PuntajeSuperior, PuntajeInferior, Puntaje) :-
+    arg(1, CategoriaActual, NombreCategoria),
+    arg(2, CategoriaActual, PuntajeCategoria),
+    categoria_superior(NombreCategoria), !,
+    NuevoPuntaje is PuntajeSuperior + PuntajeCategoria,
+    calcular_categorias(RestoCategorias, NuevoPuntaje, PuntajeInferior, Puntaje).
+calcular_categorias([CategoriaActual|RestoCategorias], PuntajeSuperior, PuntajeInferior, Puntaje) :-
+    arg(2, CategoriaActual, PuntajeCategoria),
+    NuevoPuntaje is PuntajeInferior + PuntajeCategoria,
+    calcular_categorias(RestoCategorias, PuntajeSuperior, NuevoPuntaje, Puntaje).
+calcular_categorias([],  PuntajeSuperior, PuntajeInferior, Puntaje) :-
+    PuntajeSuperior >= 63, !,
+    Puntaje is PuntajeSuperior + PuntajeInferior + 35.
+calcular_categorias([],  PuntajeSuperior, PuntajeInferior, Puntaje) :-
+    Puntaje is PuntajeSuperior + PuntajeInferior.
+
+puntaje_tablero(Tablero, Puntaje) :- calcular_categorias(Tablero, 0, 0, Puntaje).
 
 % Game Loop
 % 1. Tirar dados
