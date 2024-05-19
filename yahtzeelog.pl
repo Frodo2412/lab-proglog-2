@@ -127,6 +127,11 @@ calcular_categorias([],  PuntajeSuperior, PuntajeInferior, Puntaje) :-
 
 puntaje_tablero(Tablero, Puntaje) :- calcular_categorias(Tablero, 0, 0, Puntaje).
 
+% ajustar_tablero(+Tablero, +Categoria, +Puntaje, -TableroSalida)
+ajustar_tablero([CategoriaActual | RestoCategorias], Categoria, Puntaje, [CategoriaActual|RestoTableroSalida]) :- 
+    ajustar_tablero(RestoCategorias, Categoria, Puntaje, RestoTableroSalida).
+ajustar_tablero([s(Categoria, _)|RestoCategorias], Categoria, Puntaje, [s(Categoria, Puntaje) | RestoCategorias]).
+
 % Game Loop
 % 1. Tirar dados
 % 2. Elegir categoría
