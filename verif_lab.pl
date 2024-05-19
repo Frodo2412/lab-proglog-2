@@ -1,4 +1,6 @@
 :- begin_tests(yahtzee).
+:- consult('eval_lab.pl').
+:- consult('yahtzeelog.pl').
 
 test(dado_lanzamiento1,[nondet]):-
     iniciar(42),

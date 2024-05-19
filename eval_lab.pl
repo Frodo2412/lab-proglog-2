@@ -1,5 +1,6 @@
 :- use_module(library(random)).
 :- use_module(library(filesex)).
+:- consult('yahtzeelog.pl').
 
 tablero_test([s(aces,4), s(twos,2),s(threes,15), s(fours,16), s(fives,10), s(sixes,18),
     s(three_of_a_kind,20), s(four_of_a_kind,22), s(full_house,0), s(small_straight,0), 
@@ -41,10 +42,10 @@ yahtzeelog(Estrategia,Seed):-
     write('Puntaje obtenido:'),writeln(PuntajeFinal).
 
 % Esto es simplemente para no utilizar ronda1 como sinónimo de juego
-partida(ia_prob,TableroFinal):-
+partida(Estrategia,TableroFinal):-
     categorias(C),
     tablero_inicial(C,Tablero),
-    ronda(1,ia_prob,Tablero,TableroFinal).
+    ronda(1,Estrategia,Tablero,TableroFinal).
 
 % Ronda de juego
 % NumRonda es el número de ronda
@@ -55,7 +56,7 @@ ronda(L1,_,Tablero,Tablero):-
     length(C,L),
     L1 =:= L+1.
 
-ronda(NumRonda,ia_prob,Tablero,TableroSalida):-
+ronda(NumRonda,Estrategia,Tablero,TableroSalida):-
     categorias(C),length(C,L),
     NumRonda =< L,
     writeln('-----'),
@@ -65,18 +66,18 @@ ronda(NumRonda,ia_prob,Tablero,TableroSalida):-
     writeln(Tablero),
     lanzamiento([_,_,_,_,_],[1,1,1,1,1],Dados),
     write('Primer Lanzamiento:'),writeln(Dados),
-    cambio_dados(Dados,Tablero,ia_prob,Patron),
+    cambio_dados(Dados,Tablero,Estrategia,Patron),
     write('Patron sugerido:'),writeln(Patron),
     lanzamiento(Dados,Patron,Dados1),
     write('Segundo Lanzamiento:'),writeln(Dados1),
-    cambio_dados(Dados1,Tablero,ia_prob,Patron1),
+    cambio_dados(Dados1,Tablero,Estrategia,Patron1),
     write('Patron sugerido:'),writeln(Patron1),
     lanzamiento(Dados1,Patron1,Dados2),
     write('Tercer Lanzamiento:'),writeln(Dados2),
-    eleccion_slot(Dados2,Tablero,ia_prob,Slot),
+    eleccion_slot(Dados2,Tablero,Estrategia,Slot),
     write('Slot elegido:'),writeln(Slot),
     puntaje(Dados2,Slot,Punt),
     ajustar_tablero(Tablero,Slot,Punt,Tablero2),
     NumRonda1 is NumRonda +1, 
     writeln('Siguiente ronda...'),
-    ronda(NumRonda1,ia_prob,Tablero2,TableroSalida).
+    ronda(NumRonda1,Estrategia,Tablero2,TableroSalida).
