@@ -51,12 +51,13 @@ calcular_four_of_a_kind(_, 0).
 calcular_full_house(Dados, Puntaje) :-
     select(X, Dados, DadosRestantes),
     select(Y, DadosRestantes, DadosRestantesRestantes),
-    X \= Y, !,
+    X \= Y,
     count(DadosRestantes, X, Ocurrencias),
     Ocurrencias = 2, !,
     count(DadosRestantesRestantes, Y, Ocurrencias2),
     Ocurrencias2 = 1, !,
     Puntaje is 25.
+calcular_full_house(_, 0).
 
 is_straight(_, _, 0).
 is_straight(X, Dados, Largo) :-
@@ -132,8 +133,94 @@ ajustar_tablero([CategoriaActual | RestoCategorias], Categoria, Puntaje, [Catego
     ajustar_tablero(RestoCategorias, Categoria, Puntaje, RestoTableroSalida).
 ajustar_tablero([s(Categoria, _)|RestoCategorias], Categoria, Puntaje, [s(Categoria, Puntaje) | RestoCategorias]).
 
+leer_lista(5, _).
+leer_lista(N, [Input|T]) :-
+    writeln('Indica si quieres volver a tirar el dado (1 si, 0 si):'),
+    readln([Input]),
+    member(Input, [1,0]), !,
+    M is N + 1,
+    leer_lista(M,  T).
+leer_lista(N, [Input|T]) :-
+    writeln('Por favor ingresa 0 o 1.'),
+    leer_lista(N,  [Input|T]).
+
+% cambio_dados
+cambio_dados(Dados, Tablero, persona, Patron) :-
+    writeln('Este es el tablero actual:'),
+    writeln(Tablero),
+    writeln('Estos son tus dados:'),
+    writeln(Dados),
+    leer_lista(0, Patron).
+
+% cambio_dados(Dados, Tablero, ia, Patron) :-    
+%     % Preguntarle a ChatGPT
+% cambio_dados(Dados, Tablero, ia_prob, Patron) :-
+%     % Aca hay que usar problog
+
+mostrar_puntos_categoria(Dados, Categoria) :-
+    eleccion_categoria(N, Categoria),
+    write(N), write('. '),
+    write(Categoria),
+    puntaje(Dados, Categoria, Puntos),
+    write(':'),
+    writeln(Puntos).
+
+mostrar_puntajes_aux(_, []).
+mostrar_puntajes_aux(Dados, [s(CategoriaNombre, nil) | RestoCategorias]) :-
+    mostrar_puntos_categoria(Dados, CategoriaNombre),
+    mostrar_puntajes_aux(Dados, RestoCategorias).
+mostrar_puntajes_aux(Dados, [_|RestoCategorias]) :-
+    mostrar_puntajes_aux(Dados, RestoCategorias).
+
+mostrar_todos_puntajes(Dados, Tablero) :-
+    writeln('Puntajes por categoria:'),
+    mostrar_puntajes_aux(Dados, Tablero).
+
+eleccion_categoria(1, aces) :- !.
+eleccion_categoria(2, twos) :- !.
+eleccion_categoria(3, threes) :- !.
+eleccion_categoria(4, fours) :- !.
+eleccion_categoria(5, fives) :- !.
+eleccion_categoria(6, sixes) :- !.
+eleccion_categoria(7, three_of_a_kind) :- !.
+eleccion_categoria(8, four_of_a_kind) :- !.
+eleccion_categoria(9, full_house) :- !.
+eleccion_categoria(10, small_straight) :- !.
+eleccion_categoria(11, large_straight) :- !.
+eleccion_categoria(12, yahtzee) :- !.
+eleccion_categoria(13, chance) :- !.
+
+leer_categoria(Categoria) :-
+    writeln('Elija la categoria para la cual desea usar los dados:'),
+    readln([Input]),
+    eleccion_categoria(Input, Categoria), !,
+    write('Elejiste la categoria '), writeln(Categoria).
+leer_categoria(Categoria) :-
+    writeln('Por favo ingrese un numero del 1 al 13 que corresponda a una categoria.'),
+    leer_categoria(Categoria).
+
+eleccion_slot(Dados, Tablero, persona, Categoria) :- !,
+    writeln('Este es el tablero actual:'),
+    writeln(Tablero),
+    writeln('Estos son tus dados:'),
+    writeln(Dados),
+    mostrar_todos_puntajes(Dados, Tablero),
+    leer_categoria(Categoria), !.
+
 % Game Loop
-% 1. Tirar dados
-% 2. Elegir categoría
-% 3. Calcular puntaje
-% 4. Actualizar tablero
+% 1. Preguntar dados a re rollear
+% 2. Tirar Dados
+% 2. Elegir categoría a usar
+% 3. Actualizar Tablero en el ambiente
+% 4. Repetir
+
+
+% Ronda:
+% lanzamiento inicial
+% Hasta 3 veces
+% cambio_dados(Dados, TableroActual, _, patron)
+% lanzamiento(???)
+% eleccion_slot(Dados, TableroActual, _, Categoria)
+% puntaje(Dados, Categoria, Puntaje)
+% ajustar_tablero(TableroActual, Categoria, Puntaje, NuevoTablero)
+% nb_setarg(TableroActual, NuevoTablero)
