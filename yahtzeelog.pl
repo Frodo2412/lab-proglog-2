@@ -66,6 +66,8 @@ is_straight(X, Dados, Largo) :-
     NextLargo is Largo - 1,
     is_straight(Next, Restantes, NextLargo).
 
+% 1. Numero duplicado [1,2,3,4,4]
+% 2. Bache en la escalera [1,3,4,5,6] [1,2,3,4,6]
 calcular_small_straight(Dados, Puntaje) :-
     sort(Dados, DadosOrdenados),
     member(X, DadosOrdenados),
@@ -85,6 +87,13 @@ calcular_yahtzee([X,X,X,X,X], 50) :- !.
 calcular_yahtzee(_, 0).
 
 calcular_chance(Dados, Puntaje) :- sumlist(Dados, Puntaje).
+
+categoria_superior(aces, 1).
+categoria_superior(twos, 2).
+categoria_superior(threes, 3).
+categoria_superior(fours, 4).
+categoria_superior(fives, 5).
+categoria_superior(sixes, 6).
 
 % puntaje(+Dados, +Cat, -Puntos) devuelve en Puntos el puntaje obtenido al asignar la categoría Cat a los dados Dados
 puntaje(Dados, aces, Puntos) :- calcular_categoria_superior(Dados, 1, Puntos).
@@ -144,16 +153,86 @@ leer_lista(N, [Input|T]) :-
     writeln('Por favor ingresa 0 o 1.'),
     leer_lista(N,  [Input|T]).
 
+categoria_disponible(Tablero, Categoria) :-
+    member(s(Categoria, nil), Tablero).
+
+% es verdadero si Patron es una lista de 5 elementos que indica si se debe volver a tirar el dado correspondiente
+dados_distintos([], _, []).
+dados_distintos([Dado|Restantes], N, [0|RestoPatron]) :-
+    Dado = N, !,
+    dados_distintos(Restantes, N, RestoPatron).
+dados_distintos([_|Restantes], N, [1|RestoPatron]) :-
+    dados_distintos(Restantes, N, RestoPatron).
+
+% X = 6, [2,4,6,3,1] => [0,0,1,0,0]
+recorrer_escalera(_, [], []).
+recorrer_escalera(X, [Dado|Restantes], [1|PatronRestante]) :-
+    Dado = X, !,
+    recorrer_escalera(X, Restantes, PatronRestante).
+recorrer_escalera(X, [_|Restantes], [0|PatronRestante]) :-
+    recorrer_escalera(X, Restantes, PatronRestante).
+
+patron_escalera(Dados, Patron) :-
+    sort(Dados, [1, 2, _, _, 6]), !,
+    recorrer_escalera(6, Dados, Patron).
+
+patron_escalera(Dados, Patron) :-
+    sort(Dados, [1, 3, _, _, 6]), !,
+    recorrer_escalera(1, Dados, Patron).
+
 % cambio_dados
-cambio_dados(Dados, Tablero, persona, Patron) :-
+cambio_dados(Dados, Tablero, humano, Patron) :-
     writeln('Este es el tablero actual:'),
     writeln(Tablero),
     writeln('Estos son tus dados:'),
     writeln(Dados),
     leer_lista(0, Patron).
 
-% cambio_dados(Dados, Tablero, ia, Patron) :-    
-%     % Preguntarle a ChatGPT
+cambio_dados(Dados, Tablero, ia_det, [0,0,0,0,0]) :-
+    is_straight(1, Dados, 5),
+    categoria_disponible(Tablero, large_straight), !.
+
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    sort(Dados, [Dado | Restantes]),
+    is_straight(Dado, Restantes, 4),
+    categoria_disponible(Tablero, small_straight), !,
+    patron_escalera(Dados, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    count(Dados, N, Count),
+    Count >= 3,
+    categoria_superior(Categoria, N),
+    categoria_disponible(Tablero, Categoria), !,
+    dados_distintos(Dados, N, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    count(Dados, N, Count),
+    Count >= 3,
+    categoria_disponible(Tablero, yahtzee), !,
+    dados_distintos(Dados, N, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    count(Dados, N, Count),
+    Count >= 3,
+    N < 4,
+    categoria_disponible(Tablero, three_of_a_kind), !,
+    dados_distintos(Dados, N, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    count(Dados, N, Count),
+    Count >= 3,
+    N < 4,
+    categoria_disponible(Tablero, four_of_a_kind), !,
+    dados_distintos(Dados, N, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, [0,0,0,0,0]) :-
+    count(Dados, N, 2),
+    count(Dados, M, 3),
+    N \= M,
+    categoria_disponible(Tablero, full_house), !.
+
+cambio_dados(_, _, ia_det, [1,1,1,1,1]).
+
 % cambio_dados(Dados, Tablero, ia_prob, Patron) :-
 %     % Aca hay que usar problog
 
@@ -199,13 +278,39 @@ leer_categoria(Categoria) :-
     writeln('Por favo ingrese un numero del 1 al 13 que corresponda a una categoria.'),
     leer_categoria(Categoria).
 
-eleccion_slot(Dados, Tablero, persona, Categoria) :- !,
+
+maximo_puntaje_aux(_, [], Categoria, Categoria).
+maximo_puntaje_aux(Dados, [s(CategoriaActual, nil)| CategoriasRestantes], CategoriaMaxima, Categoria) :-
+    maximo_puntaje_aux(Dados, CategoriasRestantes, CategoriaMaxima, Categoria),
+    puntaje(Dados, CategoriaActual, Puntaje),
+    puntaje(Dados, CategoriaMaxima, PuntajeMaximo),
+    Puntaje >= PuntajeMaximo.
+
+maximo_puntaje(Dados, Tablero, Categoria) :-
+    findall(s(X, nil), member(s(X, nil), Tablero), [s(PrimeraCategoria,_)|RestoCategorias]),
+maximo_puntaje_aux(Dados, RestoCategorias, PrimeraCategoria, Categoria).
+    
+
+eleccion_slot(Dados, Tablero, humano, Categoria) :- !,
     writeln('Este es el tablero actual:'),
     writeln(Tablero),
     writeln('Estos son tus dados:'),
     writeln(Dados),
     mostrar_todos_puntajes(Dados, Tablero),
     leer_categoria(Categoria), !.
+
+eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
+    categoria_superior(Categoria, N),
+    N >=3, categoria_disponible(Tablero, Categoria), 
+    count(Dados, N, Count), Count >= 4, !.
+
+eleccion_slot(Dados, Tablero, ia_det, yahtzee) :-
+    categoria_disponible(Tablero, yahtzee),
+    count(Dados, N, Count), Count >= 5, !.
+
+% Elijo la categoria disponible con mayor puntaje
+eleccion_slot(Dados, Tablero, ia_det, Categoria) :- 
+    maximo_puntaje(Dados, Tablero, Categoria).
 
 % Game Loop
 % 1. Preguntar dados a re rollear
