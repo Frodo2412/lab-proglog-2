@@ -23,11 +23,15 @@ tiro_dado(X):-
     random(1,7,X).
 
 % Cuenta cuántas veces aparece un elemento en una lista
-count([], _, 0).
-count([X|T], X, Y) :- count(T,X,Z), Y is 1+Z.
-count([X1|T], X, Z) :- X1\=X, count(T,X,Z).
+% count(+Lista, +Elemento, -Cantidad) -> count(+Lista, ?Elemento, ?Cantidad)
+count_aux(Lista, N, Acc, Acc) :- \+select(N, Lista, _).
+count_aux(Lista, N, Acc, Count) :-
+    select(N, Lista, Resto),
+    NewAcc is Acc + 1,
+    count_aux(Resto, N, NewAcc, Count).
 
-% calu
+count(Lista, N, Count) :- count_aux(Lista, N, 0, Count).
+
 
 % calcular_categoria_superior(+Dados, +Categoria, -Puntaje) calcula el puntaje obtenido al asignar la categoría superior Categoria a los dados Dados
 calcular_categoria_superior(Dados, Categoria, Puntaje) :-
@@ -189,6 +193,26 @@ cambio_dados(Dados, Tablero, humano, Patron) :-
     leer_lista(0, Patron).
 
 cambio_dados(Dados, Tablero, ia_det, [0,0,0,0,0]) :-
+    count(Dados, N, 2),
+    count(Dados, M, 3),
+    N \= M,
+    categoria_disponible(Tablero, full_house), !.
+
+% Ver como tirar solo 2 dados
+cambio_dados(Dados, Tablero, ia_det, Patron) :-
+    count(Dados, N, 2),
+    N =< 3,
+    categoria_disponible(Tablero, full_house), !,
+    dados_distintos(Dados, N, Patron).
+
+% Ver como tirar un solo dado
+cambio_dados(Dados,Tablero, ia_det, Patron) :-
+    count(Dados, N, 3),
+    N =< 3,
+    categoria_disponible(Tablero, full_house), !,
+    dados_distintos(Dados, N, Patron).
+
+cambio_dados(Dados, Tablero, ia_det, [0,0,0,0,0]) :-
     is_straight(1, Dados, 5),
     categoria_disponible(Tablero, large_straight), !.
 
@@ -198,9 +222,12 @@ cambio_dados(Dados, Tablero, ia_det, Patron) :-
     categoria_disponible(Tablero, small_straight), !,
     patron_escalera(Dados, Patron).
 
+% Ver como jugarsela a la escalera (con 2 dados bajos (<3) o con 3 miembros de una escalera)
+
 cambio_dados(Dados, Tablero, ia_det, Patron) :-
     count(Dados, N, Count),
-    Count >= 3,
+    N >= 4,
+    Count >= 2,
     categoria_superior(Categoria, N),
     categoria_disponible(Tablero, Categoria), !,
     dados_distintos(Dados, N, Patron).
@@ -224,12 +251,6 @@ cambio_dados(Dados, Tablero, ia_det, Patron) :-
     N < 4,
     categoria_disponible(Tablero, four_of_a_kind), !,
     dados_distintos(Dados, N, Patron).
-
-cambio_dados(Dados, Tablero, ia_det, [0,0,0,0,0]) :-
-    count(Dados, N, 2),
-    count(Dados, M, 3),
-    N \= M,
-    categoria_disponible(Tablero, full_house), !.
 
 cambio_dados(_, _, ia_det, [1,1,1,1,1]).
 
@@ -306,12 +327,25 @@ eleccion_slot(Dados, Tablero, humano, Categoria) :- !,
 
 eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
     categoria_superior(Categoria, N),
-    N >=3, categoria_disponible(Tablero, Categoria), 
+    N >=4, categoria_disponible(Tablero, Categoria), 
     count(Dados, N, Count), Count >= 4, !.
 
 eleccion_slot(Dados, Tablero, ia_det, yahtzee) :-
     categoria_disponible(Tablero, yahtzee),
-    count(Dados, N, Count), Count >= 5, !.
+    puntaje(Dados, yahtzee, 50), !.
+
+eleccion_slot(Dados, Tablero, ia_det, full_house) :-
+    categoria_disponible(Tablero, full_house),
+    puntaje(Dados, full_house, 25), !.
+
+eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
+    categoria_superior(Categoria, N), categoria_disponible(Tablero, Categoria), 
+    count(Dados, N, Count), Count >= 2, !.
+
+eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
+    categoria_superior(Categoria, N), 
+    categoria_disponible(Tablero, Categoria), 
+    N < 4, !.
 
 % Elijo la categoria disponible con mayor puntaje
 eleccion_slot(Dados, Tablero, ia_det, Categoria) :- 
