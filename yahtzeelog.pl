@@ -281,10 +281,15 @@ leer_categoria(Categoria) :-
 
 maximo_puntaje_aux(_, [], Categoria, Categoria).
 maximo_puntaje_aux(Dados, [s(CategoriaActual, nil)| CategoriasRestantes], CategoriaMaxima, Categoria) :-
-    maximo_puntaje_aux(Dados, CategoriasRestantes, CategoriaMaxima, Categoria),
     puntaje(Dados, CategoriaActual, Puntaje),
     puntaje(Dados, CategoriaMaxima, PuntajeMaximo),
-    Puntaje >= PuntajeMaximo.
+    Puntaje >= PuntajeMaximo,
+    maximo_puntaje_aux(Dados, CategoriasRestantes, CategoriaActual, Categoria).
+maximo_puntaje_aux(Dados, [s(CategoriaActual, nil)| CategoriasRestantes], CategoriaMaxima, Categoria) :-
+    puntaje(Dados, CategoriaActual, Puntaje),
+    puntaje(Dados, CategoriaMaxima, PuntajeMaximo),
+    Puntaje < PuntajeMaximo,
+    maximo_puntaje_aux(Dados, CategoriasRestantes, CategoriaMaxima, Categoria).
 
 maximo_puntaje(Dados, Tablero, Categoria) :-
     findall(s(X, nil), member(s(X, nil), Tablero), [s(PrimeraCategoria,_)|RestoCategorias]),
