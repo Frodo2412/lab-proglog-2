@@ -1,5 +1,6 @@
 % Importing necessary standard library modules
 :- use_module(library(lists)).
+
 count_aux(Lista, N, Acc, Acc) :-
 	 \+ select(N, Lista, _).
 count_aux(Lista, N, Acc, Count) :-
@@ -13,7 +14,6 @@ sublist([H|T], L) :-
 	member(H, L), 
 	select(H, L, Rest), 
 	sublist(T, Rest).
-
 
 dado(1).
 dado(2).
@@ -45,6 +45,44 @@ calcular_patron_superior_aux([DadoActual|RestoDados], [1|RestoPatron], NCategori
 	DadoActual \= NCategoria, 
 	dado(NDado, NCategoria), NDadoNew is NDado + 1, 
 	calcular_patron_superior_aux(RestoDados, RestoPatron, NCategoria, NDadoNew).
+
+
+% Three of a kind
+calcular_three_of_a_kind_aux([], [], _, _, _).
+% Caso 1: No encontre los 3 dados todavia y me encuentro un dado
+calcular_three_of_a_kind_aux([Dado|Restantes], [0|Patron], Dado, NDado, Acc, Faltantes) :-
+    Acc < 3,
+    AccNew is Acc + 1,
+    NDadoNew is NDado + 1,
+    calcular_three_of_a_kind_aux(Restantes, Patron, Dado, NDadoNew, AccNew, Faltantes).
+% Caso 2: No encontre los 3 dados y no me encontre un dado
+calcular_three_of_a_kind_aux([Dado|Restantes], [1|Patron], N, NDado, Acc, Faltantes) :-
+    Acc < 3,
+    Dado \= N,
+    NDadoNew is NDado + 1,
+    AccNew is Acc + 1,
+    dado(NDado, N),
+    calcular_three_of_a_kind_aux(Restantes, Patron, N, NDadoNew, AccNew, Faltantes).
+% Caso 3: Ya encontre los 3 dados y el actual me da buen puntaje
+calcular_three_of_a_kind_aux([Dado|Restantes], [0|Patron], N, NDado, Acc, Faltantes) :-
+    Acc >= 3,
+    Dado > 3,
+    NDadoNew is NDado + 1,
+    calcular_three_of_a_kind_aux(Restantes, Patron, N, NDadoNew, Acc).
+% Caso 4: Ya encontre los 3 dados y el actual no me da buen puntaje
+calcular_three_of_a_kind_aux([Dado|Restantes], [1|Patron], N, NDado, Acc, Faltantes) :-
+    Acc >= 3,
+    Dado =< 3,
+    NDadoNew is NDado + 1,
+    calcular_three_of_a_kind_aux(Restantes, Patron, N, NDadoNew, Acc).
+
+calcular_three_of_a_kind(Dados, Patron) :-
+    member(N, [1,2,3,4,5,6]),
+    count(Dados, N, Count),
+    writeln('Soy gay'),
+    Faltantes is 3 - Count,
+    calcular_three_of_a_kind_aux(Dados, Patron, N, 1, 0, Faltantes),
+    write(N), write(Patron), writeln('Todos putos').
 
 calcular_full_house_aux([], [], N, M, _).
 calcular_full_house_aux([N|Restantes], [0|Patron], N, M, NDado) :-
@@ -128,6 +166,8 @@ calcular_patron(Dados, Patron, fives) :-
 	calcular_patron_superior_aux(Dados, Patron, 5, 1).
 calcular_patron(Dados, Patron, sixes) :-
 	calcular_patron_superior_aux(Dados, Patron, 6, 1).
+calcular_patron(Dados, Patron, three_of_a_kind) :-
+    calcular_three_of_a_kind(Dados, Patron).
 calcular_patron(Dados, Patron, full_house) :-
 	calcular_patron_full_house(Dados, Patron).
 calcular_patron(Dados, Patron, small_straight) :-
@@ -139,13 +179,13 @@ calcular_patron(Dados, Patron, yahtzee) :-
 	calcular_patron_superior_aux(Dados, Patron, N, 1).
 calcular_patron(Dados, [0,0,0,0,0], chance).
 
-
 query(calcular_patron([1, 1, 1, 4, 5], Patron, aces)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, twos)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, threes)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, fours)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, fives)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, sixes)).
+query(calcular_patron([1, 1, 2, 4, 5], Patron, three_of_a_kind)).
 query(calcular_patron([1, 1, 1, 4, 5], Patron, full_house)).
 query(calcular_patron([1, 1, 1, 2, 3], Patron, small_straight)).
 query(calcular_patron([1, 5, 1, 2, 3], Patron, large_straight)).
