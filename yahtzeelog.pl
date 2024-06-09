@@ -235,38 +235,76 @@ cambio_dados(_, _, ia_det, [1,1,1,1,1]).
 cambio_dados(Dados, Tablero, ia_prob, Patron) :-
 	consultar_probabilidades(Valores).
 
+consulta(Dados, Consulta) :- 
+    categorias(Categorias),
+    build_queries_for_categories(Dice, Categorias).
+
+% Helper predicate to iterate over categories and build queries
+build_queries_for_categories(_, []).
+build_queries_for_categories(Dice, [Categoria|Rest]) :-
+    % Define a Patron for each category (adjust this part based on your actual Patron logic)
+    Patron = [0, 1, 0, 1, 0],  % This is a placeholder. Replace it with actual logic.
+    consultar_patron(Dice, Patron, Categoria),
+    build_queries_for_categories(Dice, Rest).
+consultar_probabilidades(ListaValores):-
+	absolute_file_name(
+		path(problog), Problog, 
+		[access(exist), 
+		extensions([exe])]),		
+	absolute_file_name(output, Modelo, 
+		[file_type(prolog)]),
+	process_create(Problog, [Modelo], 
+		[stdout(
+			pipe(In))]),
+	read_string(In, _, Result),
+	split_string(Result, "\n\t", "\r ", L),
+	writeln(Result),
+	append(L1, [_], L), 
+	lista_valores(L1, ListaValores).
+
+lista_valores([X, Y|T], [TermValor|T1]):-
+	split_string(X, "", ":", [X1|_]), 
+	term_string(TermX, X1), TermX =.. [carta, Cat, Valor], 
+	number_string(NumberY, Y), TermValor =.. [p, Cat, Valor, NumberY], 
+	lista_valores(T, T1).
+	lista_valores([],[]).
+
 % Predicado para copiar el contenido de un archivo y agregar consultas al final
 copiary_agregar_consultas(ArchivoOriginal, NuevoArchivo, Consultas) :-
-    % Abre el archivo original en modo lectura
-    open(ArchivoOriginal, read, StreamEntrada),
-    % Abre el nuevo archivo en modo escritura
-    open(NuevoArchivo, write, StreamSalida),
-    % Copia el contenido
-    copiar_contenido(StreamEntrada, StreamSalida),
-    % Cierra el archivo original después de copiar el contenido
-    close(StreamEntrada),
-    % Agrega las consultas al nuevo archivo
-    agregar_consultas(StreamSalida, Consultas),
-    % Cierra el nuevo archivo después de agregar las consultas
-    close(StreamSalida).
+	% Abre el archivo original en modo lectura
+
+	open(ArchivoOriginal, read, StreamEntrada), % Abre el nuevo archivo en modo escritura
+	
+	open(NuevoArchivo, write, StreamSalida), % Copia el contenido
+	
+	copiar_contenido(StreamEntrada, StreamSalida), % Cierra el archivo original después de copiar el contenido
+	
+	close(StreamEntrada), % Agrega las consultas al nuevo archivo
+	
+	agregar_consultas(StreamSalida, Consultas), % Cierra el nuevo archivo después de agregar las consultas
+	
+	close(StreamSalida).
 
 % Predicado para copiar el contenido de un stream a otro
 copiar_contenido(StreamEntrada, StreamSalida) :-
-    % Comprueba si hay más datos para leer en el stream de entrada
-    \+ at_end_of_stream(StreamEntrada),
-    % Lee una línea del stream de entrada
-    read_line_to_string(StreamEntrada, Linea),
-    % Escribe la línea en el stream de salida
-    writeln(StreamSalida, Linea),
-    % Continúa copiando el resto del contenido
-    copiar_contenido(StreamEntrada, StreamSalida).
+	% Comprueba si hay más datos para leer en el stream de entrada
+
+	 \+ at_end_of_stream(StreamEntrada), % Lee una línea del stream de entrada
+		
+	read_line_to_string(StreamEntrada, Linea), % Escribe la línea en el stream de salida
+	
+	writeln(StreamSalida, Linea), % Continúa copiando el resto del contenido
+	
+	copiar_contenido(StreamEntrada, StreamSalida).
 copiar_contenido(_, _).
 
 % Predicado para agregar consultas a un stream
 agregar_consultas(StreamSalida, Consultas) :-
-    % Para cada consulta en la lista, escribe en el stream de salida
-    forall(member(Consulta, Consultas), writeln(StreamSalida, Consulta)).
+	% Para cada consulta en la lista, escribe en el stream de salida
 
+	forall(
+		member(Consulta, Consultas), 
+		writeln(StreamSalida, Consulta)).
 mostrar_puntos_categoria(Dados, Categoria) :-
 	eleccion_categoria(N, Categoria), 
 	write(N), 
