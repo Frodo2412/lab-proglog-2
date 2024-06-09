@@ -232,42 +232,46 @@ cambio_dados(Dados, Tablero, ia_det, Patron) :-
 	dados_distintos(Dados, N, Patron).
 
 cambio_dados(_, _, ia_det, [1,1,1,1,1]).
+
+%---------------------------------------------------------------------------
+
 cambio_dados(Dados, Tablero, ia_prob, Patron) :-
-	consultar_probabilidades(Valores).
+	crear_queries(Dados,Queries),
+	copiary_agregar_consultas('modelo_problog.pl', 'output.pl', Queries), % Se arma el output.pl con las queries dinamicas
+	consultar_probabilidades(Valores),writeln(Valores). % Devuelve una lista Valores = [p(Dados, Patron, Categoria, probabilidad)].
+	%Falta ponderar y usar el patron con mayor probabilidad en ListaValores.
 
-consulta(Dados, Consulta) :- 
+crear_queries(Dados,Queries) :- 
     categorias(Categorias),
-    build_queries_for_categories(Dice, Categorias).
+    build_queries_for_categories(Dados, Categorias,Queries).
 
-% Helper predicate to iterate over categories and build queries
-build_queries_for_categories(_, []).
-build_queries_for_categories(Dice, [Categoria|Rest]) :-
-    % Define a Patron for each category (adjust this part based on your actual Patron logic)
-    Patron = [0, 1, 0, 1, 0],  % This is a placeholder. Replace it with actual logic.
-    consultar_patron(Dice, Patron, Categoria),
-    build_queries_for_categories(Dice, Rest).
+build_queries_for_categories(_, [], []).
+build_queries_for_categories(Dados, [Categoria|RestoCategorias], [Querie|RestoQueries]) :-
+    atomic_list_concat(Dados, ',', DadosStringConComas),
+    atom_concat('[', DadosStringConComas, DadosStringConCorcheteIzquierdo),
+    atom_concat(DadosStringConCorcheteIzquierdo, ']', DadosString),
+    atom_string(Categoria, CategoriaString),
+    atom_concat(DadosString, ', Patron, ', Params1), 
+    atom_concat(Params1, CategoriaString, Params2),
+    atom_concat('query(calcular_patron(', Params2, Params3),
+    atom_concat(Params3, ')).', Querie),
+    build_queries_for_categories(Dados, RestoCategorias, RestoQueries).
+
 consultar_probabilidades(ListaValores):-
-	absolute_file_name(
-		path(problog), Problog, 
-		[access(exist), 
-		extensions([exe])]),		
-	absolute_file_name(output, Modelo, 
-		[file_type(prolog)]),
-	process_create(Problog, [Modelo], 
-		[stdout(
-			pipe(In))]),
+	absolute_file_name(path(problog), Problog, [access(exist), extensions([exe])]),		
+	absolute_file_name(output, Modelo, [file_type(prolog)]),
+	process_create(Problog, [Modelo], [stdout(pipe(In))]),
 	read_string(In, _, Result),
 	split_string(Result, "\n\t", "\r ", L),
-	writeln(Result),
-	append(L1, [_], L), 
+	append(L1, [_], L),
 	lista_valores(L1, ListaValores).
 
 lista_valores([X, Y|T], [TermValor|T1]):-
 	split_string(X, "", ":", [X1|_]), 
-	term_string(TermX, X1), TermX =.. [carta, Cat, Valor], 
-	number_string(NumberY, Y), TermValor =.. [p, Cat, Valor, NumberY], 
+	term_string(TermX, X1), TermX =.. [calcular_patron,Dados, Patron ,Categoria], 
+	number_string(NumberY, Y), TermValor =.. [p, Dados, Patron, Categoria, NumberY],
 	lista_valores(T, T1).
-	lista_valores([],[]).
+lista_valores([],[]).
 
 % Predicado para copiar el contenido de un archivo y agregar consultas al final
 copiary_agregar_consultas(ArchivoOriginal, NuevoArchivo, Consultas) :-

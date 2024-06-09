@@ -108,12 +108,10 @@ calcular_four_of_a_kind_aux([Dado|Restantes], [1|Patron], N, NDado, Acc, Faltant
 	calcular_four_of_a_kind_aux(Restantes, Patron, N, NDadoNew, Acc, Faltantes).
 
 calcular_four_of_a_kind(Dados, Patron) :-
-	writeln('Four of a kind'),
 	member(N, [1, 2, 3, 4, 5, 6]), 
-	count(Dados, N, Count), 
-	writeln(N), Faltantes is 4 - Count, 
-	calcular_four_of_a_kind_aux(Dados, Patron, N, 1, 0, Faltantes), 
-	writeln(Patron).
+	count(Dados, N, Count),
+	Faltantes is 4 - Count, 
+	calcular_four_of_a_kind_aux(Dados, Patron, N, 1, 0, Faltantes).
 
 calcular_full_house_aux([], [], N, M, _).
 calcular_full_house_aux([N|Restantes], [0|Patron], N, M, NDado) :-
