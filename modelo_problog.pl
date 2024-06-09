@@ -210,21 +210,3 @@ calcular_patron(Dados, Patron, yahtzee) :-
 	dado(N), 
 	calcular_patron_superior_aux(Dados, Patron, N, 1).
 calcular_patron(Dados, [0,0,0,0,0], chance).
-
-query(calcular_patron([1, 1, 1, 4, 5], Patron, aces)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, twos)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, threes)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, fours)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, fives)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, sixes)).
-query(calcular_patron([1, 5, 5, 4, 1], Patron, three_of_a_kind)).
-query(calcular_patron([1, 5, 5, 4, 1], Patron, four_of_a_kind)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, full_house)).
-query(calcular_patron([1, 1, 1, 2, 3], Patron, small_straight)).
-query(calcular_patron([1, 5, 1, 2, 3], Patron, large_straight)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, yahtzee)).
-query(calcular_patron([1, 1, 1, 4, 5], Patron, chance)).
-
-
-% Calculate the probability of each category
-% Maximize the expectation (probability of obtaining the category by score)
