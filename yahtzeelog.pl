@@ -234,6 +234,39 @@ cambio_dados(Dados, Tablero, ia_det, Patron) :-
 cambio_dados(_, _, ia_det, [1,1,1,1,1]).
 cambio_dados(Dados, Tablero, ia_prob, Patron) :-
 	consultar_probabilidades(Valores).
+
+% Predicado para copiar el contenido de un archivo y agregar consultas al final
+copiary_agregar_consultas(ArchivoOriginal, NuevoArchivo, Consultas) :-
+    % Abre el archivo original en modo lectura
+    open(ArchivoOriginal, read, StreamEntrada),
+    % Abre el nuevo archivo en modo escritura
+    open(NuevoArchivo, write, StreamSalida),
+    % Copia el contenido
+    copiar_contenido(StreamEntrada, StreamSalida),
+    % Cierra el archivo original después de copiar el contenido
+    close(StreamEntrada),
+    % Agrega las consultas al nuevo archivo
+    agregar_consultas(StreamSalida, Consultas),
+    % Cierra el nuevo archivo después de agregar las consultas
+    close(StreamSalida).
+
+% Predicado para copiar el contenido de un stream a otro
+copiar_contenido(StreamEntrada, StreamSalida) :-
+    % Comprueba si hay más datos para leer en el stream de entrada
+    \+ at_end_of_stream(StreamEntrada),
+    % Lee una línea del stream de entrada
+    read_line_to_string(StreamEntrada, Linea),
+    % Escribe la línea en el stream de salida
+    writeln(StreamSalida, Linea),
+    % Continúa copiando el resto del contenido
+    copiar_contenido(StreamEntrada, StreamSalida).
+copiar_contenido(_, _).
+
+% Predicado para agregar consultas a un stream
+agregar_consultas(StreamSalida, Consultas) :-
+    % Para cada consulta en la lista, escribe en el stream de salida
+    forall(member(Consulta, Consultas), writeln(StreamSalida, Consulta)).
+
 mostrar_puntos_categoria(Dados, Categoria) :-
 	eleccion_categoria(N, Categoria), 
 	write(N), 
