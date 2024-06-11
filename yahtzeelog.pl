@@ -238,8 +238,28 @@ cambio_dados(_, _, ia_det, [1,1,1,1,1]).
 cambio_dados(Dados, Tablero, ia_prob, Patron) :-
 	crear_queries(Dados,Queries),
 	copiary_agregar_consultas('modelo_problog.pl', 'output.pl', Queries), % Se arma el output.pl con las queries dinamicas
-	consultar_probabilidades(Valores),writeln(Valores). % Devuelve una lista Valores = [p(Dados, Patron, Categoria, probabilidad)].
-	%Falta ponderar y usar el patron con mayor probabilidad en ListaValores.
+	consultar_probabilidades(Valores),% Devuelve una lista Valores = [p(Dados, Patron, Categoria, probabilidad)].
+	ponderar(Valores,ListaPonderada), % FALTA IMPLEMENTAR
+	seleccionar_mayor_patron(ListaPonderada,Patron).
+
+
+ponderar([],[]).
+ponderar([p(Dados,Patron,Categoria,Probabilidad)|RestoValores],[(Patron,Ponderacion)|Resto]). % FALTA IMPLEMENTAR
+
+% Predicado para encontrar el patrón con la mayor ponderación, FUNCIONA
+seleccionar_mayor_patron(ListaPonderada, PatronMaximo) :-
+    seleccionar_mayor_patron_aux(ListaPonderada, (_, 0), (PatronMaximo, _)).
+
+% Predicado auxiliar que recorre la lista y lleva registro del máximo actual
+seleccionar_mayor_patron_aux([], MaxActual, MaxActual).
+seleccionar_mayor_patron_aux([(Patron, Ponderacion)|Resto], (_, PonderacionMaxActual), Max) :-
+    % Si la ponderación actual es mayor que la máxima actual, actualiza el máximo
+    Ponderacion > PonderacionMaxActual,
+    seleccionar_mayor_patron_aux(Resto, (Patron, Ponderacion), Max).
+seleccionar_mayor_patron_aux([(_, Ponderacion)|Resto], (PatronMaxActual, PonderacionMaxActual), Max) :-
+    % Si la ponderación actual no es mayor, continúa con la misma máxima
+    Ponderacion =< PonderacionMaxActual,
+    seleccionar_mayor_patron_aux(Resto, (PatronMaxActual, PonderacionMaxActual), Max).
 
 crear_queries(Dados,Queries) :- 
     categorias(Categorias),
