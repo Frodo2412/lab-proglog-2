@@ -207,3 +207,4 @@ calcular_patron(Dados, Patron, large_straight) :-
 calcular_patron(Dados, Patron, yahtzee) :-
 	dado(N), 
 	calcular_patron_superior_aux(Dados, Patron, N, 1).
+query(calcular_patron([3,3,6,6,3], Patron, yahtzee)).

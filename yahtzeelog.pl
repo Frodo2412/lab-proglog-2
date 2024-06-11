@@ -191,13 +191,11 @@ cambio_dados(Dados, Tablero, ia_det, [0, 0, 0, 0, 0]) :-
 	count(Dados, N, 2), 
 	count(Dados, M, 3), N \= M, 
 	categoria_disponible(Tablero, full_house), !.
-
 % Ver como tirar solo 2 dados
 cambio_dados(Dados, Tablero, ia_det, Patron) :-
 	count(Dados, N, 2), N =< 3, 
 	categoria_disponible(Tablero, full_house), !, 
 	dados_distintos(Dados, N, Patron).
-
 % Ver como tirar un solo dado
 cambio_dados(Dados, Tablero, ia_det, Patron) :-
 	count(Dados, N, 3), N =< 3, 
@@ -234,49 +232,91 @@ cambio_dados(Dados, Tablero, ia_det, Patron) :-
 cambio_dados(_, _, ia_det, [1,1,1,1,1]).
 
 %---------------------------------------------------------------------------
-
 cambio_dados(Dados, Tablero, ia_prob, Patron) :-
-	crear_queries(Dados,Queries),
+	crear_queries(Dados, Queries, Tablero), 
 	copiary_agregar_consultas('modelo_problog.pl', 'output.pl', Queries), % Se arma el output.pl con las queries dinamicas
-	consultar_probabilidades(Valores),% Devuelve una lista Valores = [p(Dados, Patron, Categoria, probabilidad)].
-	ponderar(Valores,ListaPonderada), % FALTA IMPLEMENTAR
-	seleccionar_mayor_patron(ListaPonderada,Patron).
+	
+	consultar_probabilidades(Valores), % Devuelve una lista Valores = [p(Dados, Patron, Categoria, probabilidad)].
+	
+	ponderar(Valores, ListaPonderada), % FALTA IMPLEMENTAR
+	 
+	seleccionar_mayor_patron(ListaPonderada, Patron).
 
+calcular_puntaje_promedio([], [], Acc, Acc).
+calcular_puntaje_promedio([Dado|Resto], [0|RestoPatron], Acc, Res) :-
+	NewAcc is Acc + Dado, 
+	calcular_puntaje_promedio(Resto, RestoPatron, NewAcc, Res).
+calcular_puntaje_promedio([_|Resto], [1|RestoPatron], Acc, Res) :-
+	NewAcc is Acc + 3.5, % En un dado de 6 caras el promedio es 3.5
+
+	calcular_puntaje_promedio(Resto, RestoPatron, NewAcc, Res).
+
+% puntaje(Dados, Patron, Categoria, Puntaje)
+puntaje(_, _, aces, 5).
+puntaje(_, _, twos, 10).
+puntaje(_, _, threes, 15).
+puntaje(_, _, fours, 20).
+puntaje(_, _, fives, 25).
+puntaje(_, _, sixes, 30).
+puntaje(Dados, Patron, three_of_a_kind, Puntaje) :-
+	calcular_puntaje_promedio(Dados, Patron, 0, Puntaje).
+puntaje(Dados, Patron, four_of_a_kind, Puntaje) :-
+	calcular_puntaje_promedio(Dados, Patron, 0, Puntaje).
+puntaje(_, _, full_house, 25).
+puntaje(_, _, small_straight, 30).
+puntaje(_, _, large_straight, 40).
+puntaje(_, _, yahtzee, 50).
+puntaje(Dados, Patron, chance, Puntaje) :-
+	calcular_puntaje_promedio(Dados, Patron, 0, Puntaje).
 
 ponderar([],[]).
-ponderar([p(Dados,Patron,Categoria,Probabilidad)|RestoValores],[(Patron,Ponderacion)|Resto]). % FALTA IMPLEMENTAR
+ponderar([p(Dados, Patron, Categoria, Probabilidad)|RestoValores], [(Patron, Ponderacion)|Resto]) :-
+	puntaje(Dados, Patron, Categoria, Puntaje), Ponderacion is Puntaje*Probabilidad, 
+	ponderar(RestoValores, Resto).
 
 % Predicado para encontrar el patrón con la mayor ponderación, FUNCIONA
 seleccionar_mayor_patron(ListaPonderada, PatronMaximo) :-
-    seleccionar_mayor_patron_aux(ListaPonderada, (_, 0), (PatronMaximo, _)).
+	seleccionar_mayor_patron_aux(ListaPonderada, 
+		(_, 0), 
+		(PatronMaximo, _)).
+
+categorias_disponibles(Tablero, Categorias) :-
+	findall(
+		Categoria, 
+		(member(s(Categoria, nil), Tablero)), 
+		Categorias).
 
 % Predicado auxiliar que recorre la lista y lleva registro del máximo actual
 seleccionar_mayor_patron_aux([], MaxActual, MaxActual).
 seleccionar_mayor_patron_aux([(Patron, Ponderacion)|Resto], (_, PonderacionMaxActual), Max) :-
-    % Si la ponderación actual es mayor que la máxima actual, actualiza el máximo
-    Ponderacion > PonderacionMaxActual,
-    seleccionar_mayor_patron_aux(Resto, (Patron, Ponderacion), Max).
+	% Si la ponderación actual es mayor que la máxima actual, actualiza el máximo
+Ponderacion > PonderacionMaxActual, 
+	seleccionar_mayor_patron_aux(Resto, 
+		(Patron, Ponderacion), Max).
 seleccionar_mayor_patron_aux([(_, Ponderacion)|Resto], (PatronMaxActual, PonderacionMaxActual), Max) :-
-    % Si la ponderación actual no es mayor, continúa con la misma máxima
-    Ponderacion =< PonderacionMaxActual,
-    seleccionar_mayor_patron_aux(Resto, (PatronMaxActual, PonderacionMaxActual), Max).
+	% Si la ponderación actual no es mayor, continúa con la misma máxima
+Ponderacion =< PonderacionMaxActual, 
+	seleccionar_mayor_patron_aux(Resto, 
+		(PatronMaxActual, PonderacionMaxActual), Max).
+crear_queries(Dados, Queries, Tablero) :-
+	categorias_disponibles(Tablero, Categorias),
+	build_queries_for_categories(Dados, Categorias, Queries).
 
-crear_queries(Dados,Queries) :- 
-    categorias(Categorias),
-    build_queries_for_categories(Dados, Categorias,Queries).
-
+% Ver de filtrar categorias que no esten disponibles
 build_queries_for_categories(_, [], []).
+build_queries_for_categories(Dados, [chance|RestoCategorias], Queries) :-
+	!, 
+	build_queries_for_categories(Dados, RestoCategorias, Queries).
 build_queries_for_categories(Dados, [Categoria|RestoCategorias], [Querie|RestoQueries]) :-
-    atomic_list_concat(Dados, ',', DadosStringConComas),
-    atom_concat('[', DadosStringConComas, DadosStringConCorcheteIzquierdo),
-    atom_concat(DadosStringConCorcheteIzquierdo, ']', DadosString),
-    atom_string(Categoria, CategoriaString),
-    atom_concat(DadosString, ', Patron, ', Params1), 
-    atom_concat(Params1, CategoriaString, Params2),
-    atom_concat('query(calcular_patron(', Params2, Params3),
-    atom_concat(Params3, ')).', Querie),
-    build_queries_for_categories(Dados, RestoCategorias, RestoQueries).
-
+	atomic_list_concat(Dados, ',', DadosStringConComas), 
+	atom_concat('[', DadosStringConComas, DadosStringConCorcheteIzquierdo), 
+	atom_concat(DadosStringConCorcheteIzquierdo, ']', DadosString), 
+	atom_string(Categoria, CategoriaString), 
+	atom_concat(DadosString, ', Patron, ', Params1), 
+	atom_concat(Params1, CategoriaString, Params2), 
+	atom_concat('query(calcular_patron(', Params2, Params3), 
+	atom_concat(Params3, ')).', Querie), 
+	build_queries_for_categories(Dados, RestoCategorias, RestoQueries).
 consultar_probabilidades(ListaValores):-
 	absolute_file_name(path(problog), Problog, [access(exist), extensions([exe])]),		
 	absolute_file_name(output, Modelo, [file_type(prolog)]),
@@ -285,11 +325,10 @@ consultar_probabilidades(ListaValores):-
 	split_string(Result, "\n\t", "\r ", L),
 	append(L1, [_], L),
 	lista_valores(L1, ListaValores).
-
 lista_valores([X, Y|T], [TermValor|T1]):-
 	split_string(X, "", ":", [X1|_]), 
-	term_string(TermX, X1), TermX =.. [calcular_patron,Dados, Patron ,Categoria], 
-	number_string(NumberY, Y), TermValor =.. [p, Dados, Patron, Categoria, NumberY],
+	term_string(TermX, X1), TermX =.. [calcular_patron, Dados, Patron, Categoria], 
+	number_string(NumberY, Y), TermValor =.. [p, Dados, Patron, Categoria, NumberY], 
 	lista_valores(T, T1).
 lista_valores([],[]).
 
@@ -383,6 +422,33 @@ leer_categoria(Categoria) :-
 	writeln('Por favo ingrese un numero del 1 al 13 que corresponda a una categoria.'), 
 	leer_categoria(Categoria).
 
+puntaje_promedio(aces, 1.88).
+puntaje_promedio(twos, 5.28).
+puntaje_promedio(threes, 8.56).
+puntaje_promedio(fours, 12.16).
+puntaje_promedio(fives, 15.69).
+puntaje_promedio(sixes, 19.81).
+puntaje_promedio(three_of_a_kind, 21.66).
+puntaje_promedio(four_of_a_kind, 13.09).
+puntaje_promedio(full_house, 25).
+puntaje_promedio(small_straight, 30).
+puntaje_promedio(large_straight, 40).
+puntaje_promedio(yahtzee, 50).
+puntaje_promedio(chance, 22.01).
+
+por_encima_promedio(Dados, Categoria) :-
+	puntaje(Dados, Categoria, Puntaje), 
+	puntaje_promedio(Categoria, Promedio), 
+	Puntaje > Promedio.
+
+encontrar_por_encima_del_promedio(Dados, Tablero, Categoria) :-
+	findall(
+		s(X, nil), 
+		(member(
+			s(X, nil), Tablero), 
+			por_encima_promedio(Dados, X)), 
+		[s(PrimeraCategoria, _)|RestoCategorias]), 
+	maximo_puntaje_aux(Dados, RestoCategorias, PrimeraCategoria, Categoria).
 
 maximo_puntaje_aux(_, [], Categoria, Categoria).
 maximo_puntaje_aux(Dados, [s(CategoriaActual, nil)|CategoriasRestantes], CategoriaMaxima, Categoria) :-
@@ -400,6 +466,12 @@ maximo_puntaje(Dados, Tablero, Categoria) :-
 			s(X, nil), Tablero), 
 		[s(PrimeraCategoria, _)|RestoCategorias]), 
 	maximo_puntaje_aux(Dados, RestoCategorias, PrimeraCategoria, Categoria).
+
+elegir_categoria(Dados, Tablero, Categoria) :-
+	encontrar_por_encima_del_promedio(Dados, Tablero, Categoria), !.
+elegir_categoria(Dados, Tablero, Categoria) :-
+	maximo_puntaje(Dados, Tablero, Categoria), !.
+
 eleccion_slot(Dados, Tablero, humano, Categoria) :-
 	!, 
 	writeln('Este es el tablero actual:'), 
@@ -428,7 +500,10 @@ eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
 
 % Elijo la categoria disponible con mayor puntaje
 eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
-	maximo_puntaje(Dados, Tablero, Categoria).
+	elegir_categoria(Dados, Tablero, Categoria).
+
+eleccion_slot(Dados, Tablero, ia_prob, Categoria) :-
+	elegir_categoria(Dados, Tablero, Categoria).
 
 % Game Loop
 % 1. Preguntar dados a re rollear
