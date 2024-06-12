@@ -1,0 +1,44 @@
+# Yahtzee en Prolog
+## Laboratorio Programación Lógica 2023
+## UdelaR
+### Versión 1.0
+
+Este laboratorio permite jugar al juego de dados Yahtzee. Se hace uso de predicados implementados en Prolog que representan la lógica del juego, la IA que puede tomar decisiones basadas en el estado actual del juego y la IA Prob que se basa en Problgo para tomar decisiones.
+
+# Instalación
+- Asegurarse de tener instalado Python (3.9+).
+- Instalar la biblioteca de Problog ejecutando `pip install problog`
+- Verificar que SWI Prolog esté instalado y que su ejecutable esté en el Path del sistema.
+
+
+# Reglas del juego
+
+Yahtzee es un juego de dados donde el objetivo es obtener la mayor cantidad de puntos completando ciertas combinaciones de dados. Cada jugador tiene tres tiradas por turno para intentar obtener una de las combinaciones. Después de cada tirada, el jugador puede decidir cuáles dados guardar y cuáles volver a lanzar. Al final del turno, el jugador debe elegir una combinación y registrar su puntuación para esa ronda.
+
+El juego continúa hasta que todas las combinaciones hayan sido usadas. El jugador con la mayor cantidad de puntos al final del juego gana.
+
+
+Una implementación de referencia está disponible en https://react-yahtzee.netlify.app/
+
+El juego de Yahtzee en Prolog incluye los siguientes componentes principales:
+
+- **Motor de Juego**: Implementado en Prolog, maneja la lógica del juego, incluyendo el lanzamiento de dados, la selección de categorías y el cálculo de puntuaciones.
+
+- **Generador de Números Aleatorios**: Utilizado para simular los lanzamientos de dados.
+
+- **IA para Jugar Yahtzee**: Un conjunto de estrategias implementadas en Prolog que deciden los movimientos a realizar.
+
+- **Gestión del Estado del Juego**: Predicados Prolog que mantienen el estado actual del juego, incluyendo el tablero de puntuación y los dados.
+
+- **Puente Prolog-Problog**: Si se utilizan funcionalidades de Problog, este componente permite la comunicación entre el código Prolog y Problog.
+
+# Instrucciones de Uso
+
+######COMPLETAR#####
+
+# Archivos
+
+modelos_problog.pl
+verif_lab.pl
+eval_lab.pl
+yahtzeelog.pl
