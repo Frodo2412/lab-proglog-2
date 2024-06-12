@@ -7,7 +7,7 @@ Este laboratorio permite jugar al juego de dados Yahtzee. Se hace uso de predica
 
 # Instalación
 - Asegurarse de tener instalado Python (3.9+).
-- Instalar la biblioteca de Problog ejecutando `pip install problog`
+- Instalar la biblioteca de Problog ejecutando `pip install problog` (en Windows instalar con derechos de administrador para que quede en el `PATH`)
 - Verificar que SWI Prolog esté instalado y que su ejecutable esté en el Path del sistema.
 
 
