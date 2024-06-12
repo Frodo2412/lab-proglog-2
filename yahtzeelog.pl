@@ -555,4 +555,4 @@ ronda(NumRonda,Estrategia,Tablero,TableroSalida):-
     ajustar_tablero(Tablero,Slot,Punt,Tablero2),
     NumRonda1 is NumRonda +1, 
     writeln('Siguiente ronda...'),
-    ronda(NumRonda1,Estrategia,Tablero2,TableroSalida).
+    ronda(NumRonda1,Estrategia,Tablero2,TableroSalida), !.
