@@ -74,11 +74,7 @@ Para jugar con la estrategia AI probabilística utilizando Problog, ejecute el p
 
 Donde `12345` es la semilla para el generador de números aleatorios.
 
-# Archivos
+# Archivos adicionales
 
-- `categorias.pl`: Definiciones de categorías superiores y verificaciones de combinaciones.
-- `puntaje.pl`: Cálculo de puntajes para diferentes combinaciones de dados y categorías.
-- `tablero.pl`: Manejo del estado del tablero y ajuste de puntuaciones.
-- `humano.pl`: Estrategia para permitir la entrada del usuario.
-- `ia_det.pl`: Estrategia AI determinista para decidir movimientos.
 - `modelo_problog.pl`: Estrategia AI probabilística utilizando Problog para calcular el mejor patrón de dados.
+
