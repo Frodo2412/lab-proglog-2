@@ -1,10 +1,10 @@
 :- use_module(library(random)).
-:- consult('ejemplo_invocacion_problog.pl').
+:- consult('common.pl').
+:- consult('estrategias/humano.pl').
+:- consult('estrategias/ia_det.pl').
 
 % Setea el estado inicial del generador de números aleatorios
-iniciar(X):-
-	set_random(
-		seed(X)).
+iniciar(X):-set_random(seed(X)).
 
 % Tabla con las trece categorías
 categorias([aces,twos,threes,fours,fives,sixes,three_of_a_kind,four_of_a_kind,full_house,small_straight,large_straight,yahtzee,chance]).
@@ -22,141 +22,7 @@ lanzamiento([_|T], [1|T1], [X1|T2]):-
 	lanzamiento(T, T1, T2).
 
 % Lanza un dado
-tiro_dado(X):-
-	random(1, 7, X).
-
-% Cuenta cuántas veces aparece un elemento en una lista
-% count(+Lista, +Elemento, -Cantidad) -> count(+Lista, ?Elemento, ?Cantidad)
-count_aux(Lista, N, Acc, Acc) :-
-	 \+ select(N, Lista, _).
-count_aux(Lista, N, Acc, Count) :-
-	select(N, Lista, Resto), NewAcc is Acc + 1, 
-	count_aux(Resto, N, NewAcc, Count).
-count(Lista, N, Count) :-
-	count_aux(Lista, N, 0, Count).
-
-
-% calcular_categoria_superior(+Dados, +Categoria, -Puntaje) calcula el puntaje obtenido al asignar la categoría superior Categoria a los dados Dados
-calcular_categoria_superior(Dados, Categoria, Puntaje) :-
-	count(Dados, Categoria, Ocurrencias), Puntaje is Categoria*Ocurrencias.
-calcular_three_of_a_kind(Dados, Puntaje) :-
-	member(X, Dados), 
-	count(Dados, X, Ocurrencias), Ocurrencias >= 3, !, 
-	sumlist(Dados, Puntaje).
-calcular_three_of_a_kind(_, 0).
-calcular_four_of_a_kind(Dados, Puntaje) :-
-	member(X, Dados), 
-	count(Dados, X, Ocurrencias), Ocurrencias >= 4, !, 
-	sumlist(Dados, Puntaje).
-calcular_four_of_a_kind(_, 0).
-calcular_full_house(Dados, Puntaje) :-
-	select(X, Dados, DadosRestantes), 
-	select(Y, DadosRestantes, DadosRestantesRestantes), X \= Y, 
-	count(DadosRestantes, X, Ocurrencias), Ocurrencias = 2, 
-	count(DadosRestantesRestantes, Y, Ocurrencias2), Ocurrencias2 = 1, !, Puntaje is 25.
-calcular_full_house(_, 0).
-
-is_straight(_, _, 0).
-is_straight(X, Dados, Largo) :-
-	select(X, Dados, Restantes), Next is X + 1, NextLargo is Largo - 1, 
-	is_straight(Next, Restantes, NextLargo).
-
-% 1. Numero duplicado [1,2,3,4,4]
-% 2. Bache en la escalera [1,3,4,5,6] [1,2,3,4,6]
-calcular_small_straight(Dados, Puntaje) :-
-	sort(Dados, DadosOrdenados), 
-	member(X, DadosOrdenados), Next is X + 1, 
-	is_straight(Next, DadosOrdenados, 3), !, Puntaje is 30.
-calcular_small_straight(_, 0).
-large_straight([1, 2, 3, 4, 5], 40) :-
-	!.
-large_straight([2, 3, 4, 5, 6], 40) :-
-	!.
-large_straight(_, 0).
-calcular_large_straight(Dados, Puntaje) :-
-	sort(Dados, DadosOrdenados), 
-	large_straight(DadosOrdenados, Puntaje).
-calcular_yahtzee([X, X, X, X, X], 50) :-
-	!.
-calcular_yahtzee(_, 0).
-calcular_chance(Dados, Puntaje) :-
-	sumlist(Dados, Puntaje).
-
-categoria_superior(aces, 1).
-categoria_superior(twos, 2).
-categoria_superior(threes, 3).
-categoria_superior(fours, 4).
-categoria_superior(fives, 5).
-categoria_superior(sixes, 6).
-
-% puntaje(+Dados, +Cat, -Puntos) devuelve en Puntos el puntaje obtenido al asignar la categoría Cat a los dados Dados
-puntaje(Dados, aces, Puntos) :-
-	calcular_categoria_superior(Dados, 1, Puntos).
-puntaje(Dados, twos, Puntos) :-
-	calcular_categoria_superior(Dados, 2, Puntos).
-puntaje(Dados, threes, Puntos) :-
-	calcular_categoria_superior(Dados, 3, Puntos).
-puntaje(Dados, fours, Puntos) :-
-	calcular_categoria_superior(Dados, 4, Puntos).
-puntaje(Dados, fives, Puntos) :-
-	calcular_categoria_superior(Dados, 5, Puntos).
-puntaje(Dados, sixes, Puntos) :-
-	calcular_categoria_superior(Dados, 6, Puntos).
-puntaje(Dados, three_of_a_kind, Puntos) :-
-	calcular_three_of_a_kind(Dados, Puntos).
-puntaje(Dados, four_of_a_kind, Puntos) :-
-	calcular_four_of_a_kind(Dados, Puntos).
-puntaje(Dados, full_house, Puntos) :-
-	calcular_full_house(Dados, Puntos).
-puntaje(Dados, small_straight, Puntos) :-
-	calcular_small_straight(Dados, Puntos).
-puntaje(Dados, large_straight, Puntos) :-
-	calcular_large_straight(Dados, Puntos).
-puntaje(Dados, yahtzee, Puntos) :-
-	calcular_yahtzee(Dados, Puntos).
-puntaje(Dados, chance, Puntos) :-
-	calcular_chance(Dados, Puntos).
-
-% puntaje_tablero(+Tablero, -Puntaje) Dado un tablero que tiene todos los slots completos devuelve el total de puntos
-
-categoria_superior(aces).
-categoria_superior(twos).
-categoria_superior(threes).
-categoria_superior(fours).
-categoria_superior(fives).
-categoria_superior(sixes).
-calcular_categorias([CategoriaActual|RestoCategorias], PuntajeSuperior, PuntajeInferior, Puntaje) :-
-	arg(1, CategoriaActual, NombreCategoria), 
-	arg(2, CategoriaActual, PuntajeCategoria), 
-	categoria_superior(NombreCategoria), !, NuevoPuntaje is PuntajeSuperior + PuntajeCategoria, 
-	calcular_categorias(RestoCategorias, NuevoPuntaje, PuntajeInferior, Puntaje).
-calcular_categorias([CategoriaActual|RestoCategorias], PuntajeSuperior, PuntajeInferior, Puntaje) :-
-	arg(2, CategoriaActual, PuntajeCategoria), NuevoPuntaje is PuntajeInferior + PuntajeCategoria, 
-	calcular_categorias(RestoCategorias, PuntajeSuperior, NuevoPuntaje, Puntaje).
-calcular_categorias([], PuntajeSuperior, PuntajeInferior, Puntaje) :-
-	PuntajeSuperior >= 63, !, Puntaje is PuntajeSuperior + PuntajeInferior + 35.
-calcular_categorias([], PuntajeSuperior, PuntajeInferior, Puntaje) :-
-	Puntaje is PuntajeSuperior + PuntajeInferior.
-puntaje_tablero(Tablero, Puntaje) :-
-	calcular_categorias(Tablero, 0, 0, Puntaje).
-
-% ajustar_tablero(+Tablero, +Categoria, +Puntaje, -TableroSalida)
-ajustar_tablero([CategoriaActual|RestoCategorias], Categoria, Puntaje, [CategoriaActual|RestoTableroSalida]) :-
-	ajustar_tablero(RestoCategorias, Categoria, Puntaje, RestoTableroSalida).
-ajustar_tablero([s(Categoria, _)|RestoCategorias], Categoria, Puntaje, [s(Categoria, Puntaje) | RestoCategorias]).
-
-leer_lista(5, _).
-leer_lista(N, [Input|T]) :-
-	writeln('Indica si quieres volver a tirar el dado (1 si, 0 si):'), 
-	readln([Input]), 
-	member(Input, [1, 0]), !, M is N + 1, 
-	leer_lista(M, T).
-leer_lista(N, [Input|T]) :-
-	writeln('Por favor ingresa 0 o 1.'), 
-	leer_lista(N, [Input|T]).
-categoria_disponible(Tablero, Categoria) :-
-	member(
-		s(Categoria, nil), Tablero).
+tiro_dado(X):- random(1, 7, X).
 
 % es verdadero si Patron es una lista de 5 elementos que indica si se debe volver a tirar el dado correspondiente
 dados_distintos([], _, []).
@@ -181,34 +47,9 @@ patron_escalera(Dados, Patron) :-
 	recorrer_escalera(1, Dados, Patron).
 
 % cambio_dados
-cambio_dados(Dados, Tablero, humano, Patron) :-
-	writeln('Este es el tablero actual:'), 
-	writeln(Tablero), 
-	writeln('Estos son tus dados:'), 
-	writeln(Dados), 
-	leer_lista(0, Patron).
-cambio_dados(Dados, Tablero, ia_det, [0, 0, 0, 0, 0]) :-
-	count(Dados, N, 2), 
-	count(Dados, M, 3), N \= M, 
-	categoria_disponible(Tablero, full_house), !.
-% Ver como tirar solo 2 dados
-cambio_dados(Dados, Tablero, ia_det, Patron) :-
-	count(Dados, N, 2), N =< 3, 
-	categoria_disponible(Tablero, full_house), !, 
-	dados_distintos(Dados, N, Patron).
-% Ver como tirar un solo dado
-cambio_dados(Dados, Tablero, ia_det, Patron) :-
-	count(Dados, N, 3), N =< 3, 
-	categoria_disponible(Tablero, full_house), !, 
-	dados_distintos(Dados, N, Patron).
-cambio_dados(Dados, Tablero, ia_det, [0, 0, 0, 0, 0]) :-
-	is_straight(1, Dados, 5), 
-	categoria_disponible(Tablero, large_straight), !.
-cambio_dados(Dados, Tablero, ia_det, Patron) :-
-	sort(Dados, [Dado|Restantes]), 
-	is_straight(Dado, Restantes, 4), 
-	categoria_disponible(Tablero, small_straight), !, 
-	patron_escalera(Dados, Patron).
+cambio_dados(Dados, Tablero, humano, Patron) :- cambio_dados_h(Dados, Tablero, Patron).
+cambio_dados(Dados, Tablero, ia_det, Patron) :- cambio_dados_det(Dados, Tablero, ia_det, Patron).
+
 
 % Ver como jugarsela a la escalera (con 2 dados bajos (<3) o con 3 miembros de una escalera)
 cambio_dados(Dados, Tablero, ia_det, Patron) :-
@@ -280,12 +121,6 @@ seleccionar_mayor_patron(ListaPonderada, PatronMaximo) :-
 		(_, 0), 
 		(PatronMaximo, _)).
 
-categorias_disponibles(Tablero, Categorias) :-
-	findall(
-		Categoria, 
-		(member(s(Categoria, nil), Tablero)), 
-		Categorias).
-
 % Predicado auxiliar que recorre la lista y lleva registro del máximo actual
 seleccionar_mayor_patron_aux([], MaxActual, MaxActual).
 seleccionar_mayor_patron_aux([(Patron, Ponderacion)|Resto], (_, PonderacionMaxActual), Max) :-
@@ -298,76 +133,7 @@ seleccionar_mayor_patron_aux([(_, Ponderacion)|Resto], (PatronMaxActual, Pondera
 Ponderacion =< PonderacionMaxActual, 
 	seleccionar_mayor_patron_aux(Resto, 
 		(PatronMaxActual, PonderacionMaxActual), Max).
-crear_queries(Dados, Queries, Tablero) :-
-	categorias_disponibles(Tablero, Categorias),
-	build_queries_for_categories(Dados, Categorias, Queries).
 
-% Ver de filtrar categorias que no esten disponibles
-build_queries_for_categories(_, [], []).
-build_queries_for_categories(Dados, [chance|RestoCategorias], Queries) :-
-	!, 
-	build_queries_for_categories(Dados, RestoCategorias, Queries).
-build_queries_for_categories(Dados, [Categoria|RestoCategorias], [Querie|RestoQueries]) :-
-	atomic_list_concat(Dados, ',', DadosStringConComas), 
-	atom_concat('[', DadosStringConComas, DadosStringConCorcheteIzquierdo), 
-	atom_concat(DadosStringConCorcheteIzquierdo, ']', DadosString), 
-	atom_string(Categoria, CategoriaString), 
-	atom_concat(DadosString, ', Patron, ', Params1), 
-	atom_concat(Params1, CategoriaString, Params2), 
-	atom_concat('query(calcular_patron(', Params2, Params3), 
-	atom_concat(Params3, ')).', Querie), 
-	build_queries_for_categories(Dados, RestoCategorias, RestoQueries).
-consultar_probabilidades(ListaValores):-
-	absolute_file_name(path(problog), Problog, [access(exist), extensions([exe])]),		
-	absolute_file_name(output, Modelo, [file_type(prolog)]),
-	process_create(Problog, [Modelo], [stdout(pipe(In))]),
-	read_string(In, _, Result),
-	split_string(Result, "\n\t", "\r ", L),
-	append(L1, [_], L),
-	lista_valores(L1, ListaValores).
-lista_valores([X, Y|T], [TermValor|T1]):-
-	split_string(X, "", ":", [X1|_]), 
-	term_string(TermX, X1), TermX =.. [calcular_patron, Dados, Patron, Categoria], 
-	number_string(NumberY, Y), TermValor =.. [p, Dados, Patron, Categoria, NumberY], 
-	lista_valores(T, T1).
-lista_valores([],[]).
-
-% Predicado para copiar el contenido de un archivo y agregar consultas al final
-copiary_agregar_consultas(ArchivoOriginal, NuevoArchivo, Consultas) :-
-	% Abre el archivo original en modo lectura
-
-	open(ArchivoOriginal, read, StreamEntrada), % Abre el nuevo archivo en modo escritura
-	
-	open(NuevoArchivo, write, StreamSalida), % Copia el contenido
-	
-	copiar_contenido(StreamEntrada, StreamSalida), % Cierra el archivo original después de copiar el contenido
-	
-	close(StreamEntrada), % Agrega las consultas al nuevo archivo
-	
-	agregar_consultas(StreamSalida, Consultas), % Cierra el nuevo archivo después de agregar las consultas
-	
-	close(StreamSalida).
-
-% Predicado para copiar el contenido de un stream a otro
-copiar_contenido(StreamEntrada, StreamSalida) :-
-	% Comprueba si hay más datos para leer en el stream de entrada
-
-	 \+ at_end_of_stream(StreamEntrada), % Lee una línea del stream de entrada
-		
-	read_line_to_string(StreamEntrada, Linea), % Escribe la línea en el stream de salida
-	
-	writeln(StreamSalida, Linea), % Continúa copiando el resto del contenido
-	
-	copiar_contenido(StreamEntrada, StreamSalida).
-copiar_contenido(_, _).
-
-% Predicado para agregar consultas a un stream
-agregar_consultas(StreamSalida, Consultas) :-
-	% Para cada consulta en la lista, escribe en el stream de salida
-
-	forall(
-		member(Consulta, Consultas), 
-		writeln(StreamSalida, Consulta)).
 mostrar_puntos_categoria(Dados, Categoria) :-
 	eleccion_categoria(N, Categoria), 
 	write(N), 
@@ -504,21 +270,3 @@ eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
 
 eleccion_slot(Dados, Tablero, ia_prob, Categoria) :-
 	elegir_categoria(Dados, Tablero, Categoria).
-
-% Game Loop
-% 1. Preguntar dados a re rollear
-% 2. Tirar Dados
-% 2. Elegir categoría a usar
-% 3. Actualizar Tablero en el ambiente
-% 4. Repetir
-
-
-% Ronda:
-% lanzamiento inicial
-% Hasta 3 veces
-% cambio_dados(Dados, TableroActual, _, patron)
-% lanzamiento(???)
-% eleccion_slot(Dados, TableroActual, _, Categoria)
-% puntaje(Dados, Categoria, Puntaje)
-% ajustar_tablero(TableroActual, Categoria, Puntaje, NuevoTablero)
-% nb_setarg(TableroActual, NuevoTablero)

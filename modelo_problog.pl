@@ -45,7 +45,6 @@ calcular_patron_superior_aux([DadoActual|RestoDados], [1|RestoPatron], NCategori
 	dado(NDado, NCategoria), NDadoNew is NDado + 1, 
 	calcular_patron_superior_aux(RestoDados, RestoPatron, NCategoria, NDadoNew).
 
-
 % Three of a kind
 calcular_three_of_a_kind_aux([], [], _, _, _, _).
 % Caso 1: No encontre los 3 dados todavia y me encuentro un dado
