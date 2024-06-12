@@ -54,9 +54,9 @@ Indica si quieres volver a tirar el dado (1 si, 0 no): [0,1,0,1,1]
 ```
 Ingrese 1 o 0 para cada dado, y el juego procederá según sus elecciones hasta que todas las categorías estén llenas.
 
-### Ejecución del Juego para una Estrategia AI Determinista
+### Ejecución del Juego para una Estrategia IA Determinista
 
-Para jugar con la estrategia AI determinista, ejecute el predicado `yahtzeelog(ia_det, Seed)` en SWI Prolog:
+Para jugar con la estrategia IA determinista, ejecute el predicado `yahtzeelog(ia_det, Seed)` en SWI Prolog:
 
 ```prolog
 ?- yahtzeelog(ia_det, 12345).
@@ -64,9 +64,9 @@ Para jugar con la estrategia AI determinista, ejecute el predicado `yahtzeelog(i
 
 Donde `12345` es la semilla para el generador de números aleatorios.
 
-### Ejecución del Juego para una Estrategia AI Probabilística
+### Ejecución del Juego para una Estrategia IA Probabilística
 
-Para jugar con la estrategia AI probabilística utilizando Problog, ejecute el predicado `yahtzeelog(ia_prob, Seed)` en SWI Prolog:
+Para jugar con la estrategia IA probabilística utilizando Problog, ejecute el predicado `yahtzeelog(ia_prob, Seed)` en SWI Prolog:
 
 ```prolog
 ?- yahtzeelog(ia_prob, 12345).
@@ -76,5 +76,5 @@ Donde `12345` es la semilla para el generador de números aleatorios.
 
 # Archivos adicionales
 
-- `modelo_problog.pl`: Estrategia AI probabilística utilizando Problog para calcular el mejor patrón de dados.
+- `modelo_problog.pl`: Estrategia IA probabilística utilizando Problog para calcular el mejor patrón de dados.
 
