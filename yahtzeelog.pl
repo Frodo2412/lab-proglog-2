@@ -146,7 +146,7 @@ ajustar_tablero([s(Categoria, _)|RestoCategorias], Categoria, Puntaje, [s(Catego
 
 leer_lista(5, _).
 leer_lista(N, [Input|T]) :-
-	writeln('Indica si quieres volver a tirar el dado (1 si, 0 si):'), 
+	writeln('Indica si quieres volver a tirar el dado (1 si, 0 no):'), 
 	readln([Input]), 
 	member(Input, [1, 0]), !, M is N + 1, 
 	leer_lista(M, T).
@@ -418,7 +418,7 @@ leer_categoria(Categoria) :-
 	write('Elejiste la categoria '), 
 	writeln(Categoria).
 leer_categoria(Categoria) :-
-	writeln('Por favo ingrese un numero del 1 al 13 que corresponda a una categoria.'), 
+	writeln('Por favor ingrese un numero del 1 al 13 que corresponda a una categoria.'), 
 	leer_categoria(Categoria).
 
 puntaje_promedio(aces, 1.88).
@@ -505,7 +505,14 @@ eleccion_slot(Dados, Tablero, ia_prob, Categoria) :-
 	elegir_categoria(Dados, Tablero, Categoria).
 
 % Game Loop
-
+yahtzee(humano,Seed):-
+    set_random(seed(Seed)),
+    partida(Estrategia,TableroFinal),
+    writeln('Termino el juego'),
+    % Termina el juego, calculo los resultados.
+    writeln(TableroFinal),
+    puntaje_tablero(TableroFinal,PuntajeFinal),
+    write('Puntaje obtenido:'),writeln(PuntajeFinal).
 % Jugador yahtzee
 % Jugador puede ser humano o ia
 yahtzeelog(Estrategia,Seed):-
