@@ -1,5 +1,4 @@
 :- use_module(library(random)).
-:- consult('ejemplo_invocacion_problog.pl').
 
 % Setea el estado inicial del generador de números aleatorios
 iniciar(X):-
@@ -494,7 +493,7 @@ eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
 	categoria_superior(Categoria, N), 
 	categoria_disponible(Tablero, Categoria), 
 	count(Dados, N, Count), Count >= 2, !.
-eleccion_slot(Dados, Tablero, ia_det, Categoria) :-
+eleccion_slot(_, Tablero, ia_det, Categoria) :-
 	categoria_superior(Categoria, N), 
 	categoria_disponible(Tablero, Categoria), N < 4, !.
 
@@ -506,19 +505,54 @@ eleccion_slot(Dados, Tablero, ia_prob, Categoria) :-
 	elegir_categoria(Dados, Tablero, Categoria).
 
 % Game Loop
-% 1. Preguntar dados a re rollear
-% 2. Tirar Dados
-% 2. Elegir categoría a usar
-% 3. Actualizar Tablero en el ambiente
-% 4. Repetir
 
+% Jugador yahtzee
+% Jugador puede ser humano o ia
+yahtzeelog(Estrategia,Seed):-
+    set_random(seed(Seed)),
+    partida(Estrategia,TableroFinal),
+    writeln('Termino el juego'),
+    % Termina el juego, calculo los resultados.
+    writeln(TableroFinal),
+    puntaje_tablero(TableroFinal,PuntajeFinal),
+    write('Puntaje obtenido:'),writeln(PuntajeFinal).
 
-% Ronda:
-% lanzamiento inicial
-% Hasta 3 veces
-% cambio_dados(Dados, TableroActual, _, patron)
-% lanzamiento(???)
-% eleccion_slot(Dados, TableroActual, _, Categoria)
-% puntaje(Dados, Categoria, Puntaje)
-% ajustar_tablero(TableroActual, Categoria, Puntaje, NuevoTablero)
-% nb_setarg(TableroActual, NuevoTablero)
+% Esto es simplemente para no utilizar ronda1 como sinónimo de juego
+partida(Estrategia,TableroFinal):-
+    inicial(Tablero),
+    ronda(1,Estrategia,Tablero,TableroFinal).
+
+% Ronda de juego
+% NumRonda es el número de ronda
+% Tablero es el Tablero hasta el momento
+% TableroSalida es el Tablero una vez finalizada la ronda
+ronda(L1,_,Tablero,Tablero):-
+    categorias(C),
+    length(C,L),
+    L1 =:= L+1.
+
+ronda(NumRonda,Estrategia,Tablero,TableroSalida):-
+    categorias(C),length(C,L),
+    NumRonda =< L,
+    writeln('-----'),
+    write('Ronda numero:'),
+    writeln(NumRonda),
+    writeln('Tablero actual:'),
+    writeln(Tablero),
+    lanzamiento([_,_,_,_,_],[1,1,1,1,1],Dados),
+    write('Primer Lanzamiento:'),writeln(Dados),
+    cambio_dados(Dados,Tablero,Estrategia,Patron),
+    write('Patron sugerido:'),writeln(Patron),
+    lanzamiento(Dados,Patron,Dados1),
+    write('Segundo Lanzamiento:'),writeln(Dados1),
+    cambio_dados(Dados1,Tablero,Estrategia,Patron1),
+    write('Patron sugerido:'),writeln(Patron1),
+    lanzamiento(Dados1,Patron1,Dados2),
+    write('Tercer Lanzamiento:'),writeln(Dados2),
+    eleccion_slot(Dados2,Tablero,Estrategia,Slot),
+    write('Slot elegido:'),writeln(Slot),
+    puntaje(Dados2,Slot,Punt),
+    ajustar_tablero(Tablero,Slot,Punt,Tablero2),
+    NumRonda1 is NumRonda +1, 
+    writeln('Siguiente ronda...'),
+    ronda(NumRonda1,Estrategia,Tablero2,TableroSalida).
